@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Compose supplies all visible theming. This exists only so the window has
+        a sane background before the first frame. A framework DayNight theme is
+        not usable here because those arrived in API 29 and minSdk is 26, so the
+        light and dark variants are split across values/ and values-night/.
+    -->
+    <style name="Theme.BarcodeWorkbench" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+    </style>
+</resources>

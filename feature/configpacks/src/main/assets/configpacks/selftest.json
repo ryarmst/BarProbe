@@ -1,0 +1,161 @@
+{
+  "format_version": 1,
+  "pack_id": "selftest",
+  "vendor": "Scanner self-test",
+  "description": "Ordinary data barcodes for checking what a scanner decodes and how it transmits. These carry no programming commands and cannot change any device setting.",
+  "entries": [
+    {
+      "name": "Code 128 plain",
+      "description": "Basic Code 128 with printable ASCII.",
+      "category": "1D decode check",
+      "symbology": "CODE_128",
+      "data": "TEST128",
+      "provenance": "Constructed test payload, not a vendor command.",
+      "verification": "VERIFIED"
+    },
+    {
+      "name": "Code 128 with GS separator",
+      "description": "Contains a Group Separator (0x1D) between AB and CD. Use this to check whether a scanner transmits GS or silently drops it, which is the usual cause of GS1 parsing failures downstream.",
+      "category": "1D decode check",
+      "symbology": "CODE_128",
+      "data": "AB\\x1DCD",
+      "escapes_enabled": true,
+      "provenance": "Constructed test payload, not a vendor command.",
+      "verification": "VERIFIED"
+    },
+    {
+      "name": "Code 39",
+      "category": "1D decode check",
+      "symbology": "CODE_39",
+      "data": "TEST39",
+      "provenance": "Constructed test payload, not a vendor command.",
+      "verification": "VERIFIED"
+    },
+    {
+      "name": "Code 93",
+      "category": "1D decode check",
+      "symbology": "CODE_93",
+      "data": "TEST93",
+      "provenance": "Constructed test payload, not a vendor command.",
+      "verification": "VERIFIED"
+    },
+    {
+      "name": "Codabar",
+      "description": "Includes the required A and B start and stop characters.",
+      "category": "1D decode check",
+      "symbology": "CODABAR",
+      "data": "A12345B",
+      "provenance": "Constructed test payload, not a vendor command.",
+      "verification": "VERIFIED"
+    },
+    {
+      "name": "Interleaved 2 of 5",
+      "description": "Even digit count, as the symbology requires.",
+      "category": "1D decode check",
+      "symbology": "ITF",
+      "data": "12345678",
+      "provenance": "Constructed test payload, not a vendor command.",
+      "verification": "VERIFIED"
+    },
+    {
+      "name": "EAN-13",
+      "description": "Twelve digits supplied; the check digit is computed by the encoder.",
+      "category": "Retail decode check",
+      "symbology": "EAN_13",
+      "data": "012345678901",
+      "provenance": "Constructed test payload, not a vendor command.",
+      "verification": "VERIFIED"
+    },
+    {
+      "name": "EAN-8",
+      "category": "Retail decode check",
+      "symbology": "EAN_8",
+      "data": "1234567",
+      "provenance": "Constructed test payload, not a vendor command.",
+      "verification": "VERIFIED"
+    },
+    {
+      "name": "UPC-A",
+      "category": "Retail decode check",
+      "symbology": "UPC_A",
+      "data": "01234567891",
+      "provenance": "Constructed test payload, not a vendor command.",
+      "verification": "VERIFIED"
+    },
+    {
+      "name": "GS1-128 with AI 01",
+      "description": "A GTIN in AI (01). Checks that the scanner reports the FNC1 and the AI structure correctly.",
+      "category": "GS1 decode check",
+      "symbology": "GS1_128",
+      "data": "[01]09501101530003",
+      "provenance": "Constructed test payload using a GS1 example GTIN.",
+      "verification": "VERIFIED"
+    },
+    {
+      "name": "GS1 DataBar Expanded",
+      "category": "GS1 decode check",
+      "symbology": "DATABAR_EXPANDED",
+      "data": "[01]09501101530003",
+      "provenance": "Constructed test payload using a GS1 example GTIN.",
+      "verification": "VERIFIED"
+    },
+    {
+      "name": "QR Code",
+      "category": "2D decode check",
+      "symbology": "QR_CODE",
+      "data": "Barcode Workbench self test",
+      "provenance": "Constructed test payload, not a vendor command.",
+      "verification": "VERIFIED"
+    },
+    {
+      "name": "QR Code with binary bytes",
+      "description": "Contains bytes 0x00 through 0x04. Checks whether the scanner passes binary content through intact or truncates at the NUL.",
+      "category": "2D decode check",
+      "symbology": "QR_CODE",
+      "data": "BIN\\x00\\x01\\x02\\x03\\x04",
+      "escapes_enabled": true,
+      "provenance": "Constructed test payload, not a vendor command.",
+      "verification": "VERIFIED"
+    },
+    {
+      "name": "Data Matrix",
+      "category": "2D decode check",
+      "symbology": "DATA_MATRIX",
+      "data": "TESTDM",
+      "provenance": "Constructed test payload, not a vendor command.",
+      "verification": "VERIFIED"
+    },
+    {
+      "name": "Aztec Code",
+      "category": "2D decode check",
+      "symbology": "AZTEC",
+      "data": "TESTAZTEC",
+      "provenance": "Constructed test payload, not a vendor command.",
+      "verification": "VERIFIED"
+    },
+    {
+      "name": "PDF417",
+      "category": "2D decode check",
+      "symbology": "PDF417",
+      "data": "TESTPDF417",
+      "provenance": "Constructed test payload, not a vendor command.",
+      "verification": "VERIFIED"
+    },
+    {
+      "name": "Micro QR Code",
+      "category": "2D decode check",
+      "symbology": "MICRO_QR",
+      "data": "MQR",
+      "provenance": "Constructed test payload, not a vendor command.",
+      "verification": "VERIFIED"
+    },
+    {
+      "name": "MaxiCode",
+      "category": "2D decode check",
+      "symbology": "MAXICODE",
+      "data": "TESTMAXICODE",
+      "provenance": "Constructed test payload, not a vendor command.",
+      "verification": "VERIFIED"
+    }
+  ]
+}

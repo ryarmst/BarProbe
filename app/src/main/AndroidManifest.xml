@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+        There is deliberately no INTERNET permission. Everything the app does
+        happens on-device, so it is structurally incapable of sending data
+        anywhere. A unit test asserts this permission stays absent, so the
+        guarantee cannot regress by accident.
+
+        Camera is the only runtime permission, requested when the scanner opens.
+        File access goes through the Storage Access Framework, which needs no
+        storage permission at all.
+    -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!--
+        androidx.media3-common arrives transitively through CameraX and declares
+        ACCESS_NETWORK_STATE for its streaming features, none of which this app
+        uses. Stripped here so the installed app requests nothing network-related.
+        A merged-manifest test asserts this stays removed.
+    -->
+    <uses-permission
+        android:name="android.permission.ACCESS_NETWORK_STATE"
+        tools:node="remove" />
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
+    <application
+        android:name=".WorkbenchApplication"
+        android:allowBackup="true"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.BarcodeWorkbench">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode"
+            android:theme="@style/Theme.BarcodeWorkbench">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+    </application>
+
+</manifest>

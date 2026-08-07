@@ -1,0 +1,7 @@
+{
+  "format_version": 1,
+  "pack_id": "honeywell",
+  "vendor": "Honeywell",
+  "description": "No parameter barcodes are bundled for Honeywell devices. Honeywell documents its menu commands in the user guide for each product. Author a pack from the guide for your exact model and import it here. Suggested categories: defaults, symbology-enable, prefix-suffix, interfaces, trigger-modes.",
+  "entries": []
+}

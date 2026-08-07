@@ -1,0 +1,21 @@
+# Gradle
+.gradle/
+build/
+# The wrapper jar is intentionally committed: without it a fresh clone cannot
+# bootstrap the exact Gradle version the build is pinned to.
+!gradle/wrapper/gradle-wrapper.jar
+
+# Kotlin compiler session data
+.kotlin/
+
+# Local SDK location; machine-specific
+local.properties
+
+# Native build scratch
+.cxx/
+build-host/
+build-android/
+
+# IDE
+.idea/
+*.iml

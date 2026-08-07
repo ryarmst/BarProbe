@@ -1,0 +1,2 @@
+zint Zint version 2.16.0.9 (dev) (no libpng) (no GS1 Syntax Engine)
+git-rev: 6ac010af0e9f1caebc06c1941b84f1904204cad6

@@ -1,0 +1,7 @@
+{
+  "format_version": 1,
+  "pack_id": "datalogic",
+  "vendor": "Datalogic",
+  "description": "No parameter barcodes are bundled for Datalogic devices. Datalogic publishes configuration strings in the product reference manual for each model. Author a pack from the manual for your exact model and import it here. Suggested categories: defaults, symbology-enable, formatting, interfaces, scan-modes.",
+  "entries": []
+}

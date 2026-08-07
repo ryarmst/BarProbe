@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Barcode Workbench</string>
+    <string name="nav_generate">Generate</string>
+    <string name="nav_scan">Scan</string>
+    <string name="nav_catalogue">Catalogue</string>
+    <string name="nav_config">Config</string>
+    <string name="nav_learn">Learn</string>
+</resources>

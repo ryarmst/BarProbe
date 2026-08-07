@@ -1,0 +1,70 @@
+BarProbe
+Copyright 2026 ryarmst
+
+This product includes software developed as part of the BarProbe project,
+licensed under the Apache License, Version 2.0. See the LICENSE file.
+
+================================================================================
+Third-party components
+================================================================================
+
+--------------------------------------------------------------------------------
+Zint Barcode Generator - backend only
+--------------------------------------------------------------------------------
+Version:  2.16.0.9 (dev), git-rev 6ac010af0e9f1caebc06c1941b84f1904204cad6
+License:  BSD-3-Clause
+Source:   https://sourceforge.net/projects/zint/
+Location: barcode/zint/third_party/zint (vendored)
+Full text: barcode/zint/third_party/zint/LICENSE
+
+Copyright (C) Robin Stuart and contributors.
+
+Only the BSD-licensed backend is vendored and built. Zint's frontends and its
+Qt backend remain under the GPL and are deliberately absent from this
+repository; the build additionally sets ZINT_FRONTEND=OFF and ZINT_USE_QT=OFF.
+This distinction is what allows this project to be distributed under the
+Apache License. Do not vendor the Zint frontend or Qt sources without
+revisiting the licensing of the whole project.
+
+--------------------------------------------------------------------------------
+zxing-cpp
+--------------------------------------------------------------------------------
+Version:  3.1.1 (io.github.zxing-cpp:android)
+License:  Apache-2.0
+Source:   https://github.com/zxing-cpp/zxing-cpp
+Location: binary dependency, not vendored
+
+Used for barcode decoding.
+
+--------------------------------------------------------------------------------
+Android Jetpack / AndroidX, including Jetpack Compose
+--------------------------------------------------------------------------------
+License:  Apache-2.0
+Copyright (C) The Android Open Source Project
+
+--------------------------------------------------------------------------------
+Material Design icons
+--------------------------------------------------------------------------------
+License:  Apache-2.0
+Source:   androidx.compose.material:material-icons-extended 1.7.8
+Location: core/designsystem/src/main/kotlin/dev/barcodeworkbench/core/
+          designsystem/icon/WorkbenchIcons.kt
+Copyright (C) The Android Open Source Project
+
+Seven icons (QrCode2, CameraAlt, Inventory2, Build, MenuBook, Close, Refresh)
+are reproduced verbatim in source form rather than pulled in as a dependency,
+because the upstream artifact is frozen at 1.7.8 and ships roughly four
+thousand icons to supply seven. The vector data is unmodified; a test asserts
+each one is equal to the original.
+
+--------------------------------------------------------------------------------
+Dagger / Hilt
+--------------------------------------------------------------------------------
+License:  Apache-2.0
+Copyright (C) Google LLC
+
+--------------------------------------------------------------------------------
+Kotlin standard library and kotlinx libraries
+--------------------------------------------------------------------------------
+License:  Apache-2.0
+Copyright (C) JetBrains s.r.o. and Kotlin Programming Language contributors

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    No -v26 qualifier and no PNG fallbacks: minSdk is 26, so every device that can
+    install this app supports adaptive icons. The round variant is derived from this
+    one by the launcher, so a separate ic_launcher_round is redundant.
+
+    The foreground doubles as the monochrome layer. It is already a flat silhouette,
+    which is exactly what themed icons need; the system supplies the tint.
+-->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background" />
+    <foreground android:drawable="@drawable/ic_launcher_foreground" />
+    <monochrome android:drawable="@drawable/ic_launcher_foreground" />
+</adaptive-icon>
