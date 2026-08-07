@@ -2,17 +2,48 @@
 
 A pack is one JSON file describing programming barcodes for a device family.
 
-## Why vendor packs ship empty
+## What ships
 
-Programming barcodes reconfigure real hardware, and the correct parameter string
-differs between vendors, product families and sometimes firmware revisions. A wrong
-string can leave a scanner misconfigured or awkward to recover.
+The `zebra` pack carries 546 parameter barcodes for Zebra/Symbol SSI scanners. Every
+entry's `data` was decoded from the barcode image printed in the vendor's own
+configuration guide, not transcribed from the tables beside it, then re-encoded and
+decoded again to confirm it survives a round trip unchanged. `tools/extract-config-pack.py`
+does this and can be pointed at another guide.
 
-The app therefore ships no vendor parameter codes it cannot stand behind. What ships
-instead is the format, the search, the safety handling, and an importer, so you can
-author packs from the reference guide for your exact model. The bundled `selftest`
-pack contains ordinary data barcodes only; it carries no commands and cannot change
-any device setting.
+The `honeywell` and `datalogic` packs are still empty. Programming barcodes reconfigure
+real hardware and the correct parameter string differs between vendors, product families
+and sometimes firmware revisions, so nothing goes in until it can be read off a
+published barcode the same way. Author your own from the guide for your model and
+import it.
+
+The bundled `selftest` pack contains ordinary data barcodes only; it carries no commands
+and cannot change any device setting.
+
+## Organising a vendor pack
+
+`category` is the navigation level in the UI, so it should answer "what does this do to
+the device", not "which chapter was it in". The Zebra pack uses, in order:
+
+`Recovery & Defaults`, `Programming Lock`, `Host Output & Injection`,
+`Symbology Enablement`, `Symbology Length Limits`, `Symbology Integrity`,
+`Symbology Options`, `Image & Signature Capture`, `Document Capture`,
+`OCR & Sensitive Text`, `Scanner Behaviour`, `Parameter Entry Values`.
+
+Recovery comes first so the way back is always visible. The two groups after it are the
+ones that matter most to anyone auditing a device: whether the scanner will accept
+further programming barcodes at all, and what it injects into the host alongside the
+data it reads.
+
+`subcategory` keeps the vendor's own setting name, which is what someone holding the
+guide will search for.
+
+## (category, name) must be unique within a pack
+
+`config_entries` has a unique index on `(pack_id, category, name)` and the DAO inserts
+with `REPLACE`. Two entries sharing a category and a name means the second silently
+evicts the first: no error, the barcode is just missing. Vendor guides reuse wording
+constantly -- "Inverse Autodetect" appears under five different symbologies in the Zebra
+guide -- so qualify colliding names with their subcategory. A test enforces this.
 
 ## Schema
 

@@ -143,10 +143,66 @@ class BundledPackTest {
     }
 
     @Test
+    fun `no pack has two entries sharing a category and name`() {
+        // config_entries carries a unique index on (pack_id, category, name) and the
+        // DAO inserts with REPLACE, so a duplicate pair does not fail loudly -- the
+        // second entry evicts the first and simply goes missing from the UI. The
+        // Zebra guide reuses wording like "Inverse Autodetect" across five
+        // symbologies, which silently cost 37 entries before this was caught.
+        packFiles().forEach { file ->
+            val pack = ConfigPackFormat.parse(file.readText())
+            val duplicates = pack.entries
+                .groupBy { it.category to it.name }
+                .filterValues { it.size > 1 }
+            assertWithMessage(
+                "${file.name} would lose entries on load; duplicate (category, name): " +
+                    duplicates.keys.joinToString { "${it.first}/${it.second}" },
+            ).that(duplicates).isEmpty()
+        }
+    }
+
+    @Test
+    fun `entry payloads are unique within a pack for a given symbology`() {
+        // The same payload twice in one symbology is the same barcode listed twice,
+        // which usually means an extractor picked up a page where the guide reprints
+        // a code in a summary table.
+        //
+        // Keyed on symbology as well as data because one payload in two symbologies
+        // is a different barcode and a legitimate thing to ship: the self-test pack
+        // carries the same GTIN as both GS1-128 and DataBar Expanded precisely so a
+        // scanner's handling of the two can be compared.
+        packFiles().forEach { file ->
+            val pack = ConfigPackFormat.parse(file.readText())
+            val repeated = pack.entries
+                .groupBy { it.data to it.symbology }
+                .filterValues { it.size > 1 }
+            assertWithMessage(
+                "${file.name} repeats payloads: " +
+                    repeated.entries.joinToString { "${it.key.first}/${it.key.second}" },
+            ).that(repeated).isEmpty()
+        }
+    }
+
+    @Test
+    fun `a pack with destructive entries also ships a recovery path`() {
+        // Anything that can strand a device needs a documented way back in the same
+        // pack. The Zebra lockout code is the case that matters: shipping Lock with
+        // no route to defaults would leave a scanner unprogrammable.
+        packFiles().forEach { file ->
+            val pack = ConfigPackFormat.parse(file.readText())
+            val entries = ConfigPackFormat.toDomain(pack, bundled = true)
+            if (entries.none { it.destructive }) return@forEach
+            assertWithMessage("${file.name} has destructive entries but no recovery path")
+                .that(entries.any { it.restoresDefaults })
+                .isTrue()
+        }
+    }
+
+    @Test
     fun `vendor packs ship no unverified parameter codes`() {
-        // The deliberate position: rather than shipping plausible-looking parameter
-        // strings that cannot be checked, vendor packs carry structure and guidance
-        // only. This asserts that stays true.
+        // Vendor packs may only carry entries whose data was checked against the
+        // vendor's own documentation. Anything weaker stays out; a plausible-looking
+        // parameter string that cannot be traced is worse than an empty pack.
         val vendorPacks = packFiles().filter { it.name != "selftest.json" }
         assertThat(vendorPacks).isNotEmpty()
         vendorPacks.forEach { file ->
@@ -156,7 +212,7 @@ class BundledPackTest {
             assertWithMessage(
                 "${file.name} ships ${untrustworthy.size} entries that are not verified",
             ).that(untrustworthy).isEmpty()
-            assertWithMessage("${file.name} should explain why it is empty")
+            assertWithMessage("${file.name} needs a description, whether or not it is empty")
                 .that(pack.description).isNotNull()
         }
     }

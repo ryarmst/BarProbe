@@ -954,7 +954,88 @@ command was malformed — the alignment argument was missing, so the APK path wa
 parsed as the alignment. The APK was fine. Worth recording because the failure looked
 exactly like a real one.
 
-## 25. Roadmap
+## 25. Zebra config pack
+
+546 verified parameter barcodes now ship for Zebra/Symbol SSI scanners, ending the
+position that vendor packs stay empty. What changed is not the standard but the method
+of meeting it.
+
+### Decode the barcode, do not transcribe the table
+
+`tools/extract-config-pack.py` renders each page of a vendor guide, decodes the barcodes
+with zxing-cpp, and takes the parameter string from the symbol rather than the prose
+beside it. That removes the step the old position was built around: a human copying a
+hex string out of a table and getting it wrong. Reading the vendor's own printed barcode
+is a stronger check than reading their description of it, so these entries are
+legitimately `VERIFIED`.
+
+Every entry is re-encoded and decoded again before it is written; anything that does not
+survive unchanged is dropped. From 557 decoded barcodes: 7 caption duplicates, 4 payload
+duplicates, 0 round-trip failures, 546 kept. Captions are matched to symbols by geometry
+(nearest text block below, horizontally overlapping) and all 557 matched.
+
+### Organised by consequence, not by chapter
+
+The guide's own structure is the wrong axis for auditing a device: "Symbologies" is one
+292-entry chapter mixing "which codes will this scanner read at all" with "how loud is
+the beep". The pack uses twelve categories ordered by what a wrong scan costs:
+
+    01 Recovery & Defaults       3     07 Symbology Options         71
+    02 Programming Lock          8     08 Image & Signature Capture 70
+    03 Host Output & Injection  20     09 Document Capture          34
+    04 Symbology Enablement    119     10 OCR & Sensitive Text      49
+    05 Symbology Length Limits  33     11 Scanner Behaviour         42
+    06 Symbology Integrity      64     12 Parameter Entry Values    33
+
+Recovery first so the way back is always visible. Then the two groups that matter most
+to anyone assessing a scanner: whether it will accept further programming barcodes at
+all, and what it injects into the host alongside the data it reads. `subcategory` keeps
+the vendor's own setting name, which is what someone holding the guide searches for.
+
+Nine entries carry explicit cautions: the parameter-scanning lockout, MICR E13B (reads
+cheque account and routing numbers) and US Currency serial numbers.
+
+### Five defects, four of which only a running system would show
+
+1. **37 entries would have vanished silently.** `config_entries` has a unique index on
+   `(pack_id, category, name)` and the DAO inserts with `REPLACE`. Vendor guides reuse
+   wording constantly — "Inverse Autodetect" appears under five symbologies — so
+   colliding entries overwrite each other with no error at all. Names are now qualified
+   with their subcategory where they collide (99 of 546).
+2. **Section attribution was off by a page boundary.** `carry_section` advanced before
+   the page's barcodes were processed, so codes above the first heading were filed under
+   the page's *last* section. Eight transmission-format codes were sitting under "FN1
+   Substitution Values".
+3. **Reprints from the defaults-summary tables** inherited nonsense sections — "Disable
+   OCR-A" filed under "Video Resolution". Those pages have no heading structure. They
+   are recognisable by a "Feature/Option" caption and are now deduplicated away in
+   favour of the properly-sectioned copy.
+4. **Lock showed the Unlock warning.** The note was matched against section plus name,
+   and the section is "Lock/Unlock Parameter Scanning". Matching on the name alone fixed
+   it. Found by reading the entry on the device, not by any test.
+5. **MicroPDF417 and MicroQR carried a cheque-reading warning**, because `micr` matches
+   inside "MICRo". Found by auditing all nine warnings as a list rather than spot-checking.
+
+### What now guards this
+
+Three host tests: no two entries share a `(category, name)`; payloads are unique per
+symbology (keyed on both, because the self-test pack deliberately carries one GTIN as
+GS1-128 *and* DataBar Expanded); a pack with destructive entries must also ship a
+recovery path.
+
+More importantly, `feature:configpacks` now has instrumented tests, because the failure
+that mattered is invisible to host tests — it happens inside SQLite. `BundledPackLoadTest`
+loads the real assets into a real Room database and compares what the loader believed it
+wrote against `COUNT(*)`. Negative-controlled: injecting one collision fails it with
+"reported 546 entries but the database holds 545".
+
+It also asserts the category order the user actually sees. That order needed the numeric
+prefixes: the categories query sorts alphabetically and the schema has no column for a
+pack's intended order, which put Programming Lock between Parameter Entry Values and
+Scanner Behaviour. A `sort_order` column would be the cleaner fix and would need a
+schema v4 migration.
+
+## 26. Roadmap
 
 Phase 0 — Environment. Android SDK, platform 36, build-tools, NDK, CMake, Gradle wrapper. In progress.
 
