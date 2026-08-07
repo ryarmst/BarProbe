@@ -2,6 +2,7 @@ package dev.barcodeworkbench.feature.configpacks
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -46,6 +47,9 @@ fun ConfigPacksScreen(
     val entries by viewModel.entries.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var inspecting by remember { mutableStateOf<ConfigEntry?>(null) }
+    // Not keyed on the vendor: someone who opens recovery is usually working
+    // through it, and reclosing on every vendor change would be tiresome.
+    var showRecovery by remember { mutableStateOf(false) }
 
     val importPack = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument(),
@@ -113,18 +117,36 @@ fun ConfigPacksScreen(
                 }
             }
 
-            // Recovery first: a vendor's restore-to-defaults entries are surfaced
-            // ahead of everything else, so getting back to a known state is never
-            // buried in a folder tree.
+            // Recovery stays one tap from anywhere, but collapsed. Expanded by
+            // default it cost a header, a row per entry and a divider before the
+            // category chips were even reachable, which pushed the actual content
+            // off the first screen. The point was that recovery is never buried in
+            // a folder tree; a labelled row on the way past satisfies that without
+            // spending a third of the screen on three barcodes.
             if (state.defaults.isNotEmpty()) {
-                Text(
-                    text = "Recovery",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 12.dp),
-                )
-                state.defaults.forEach { entry ->
-                    EntryRow(entry = entry, onClick = { inspecting = entry })
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showRecovery = !showRecovery }
+                        .padding(top = 12.dp, bottom = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "Recovery (${state.defaults.size})",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = if (showRecovery) "Hide" else "Show",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                if (showRecovery) {
+                    state.defaults.forEach { entry ->
+                        EntryRow(entry = entry, onClick = { inspecting = entry })
+                    }
                 }
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             }

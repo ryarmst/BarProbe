@@ -83,8 +83,18 @@ jobs:
       - name: Lint
         run: ./gradlew :app:lintRelease
 
+      # On a tag, the version has to reach Gradle before the APKs are built: the
+      # release job only repackages what this job produced. Without it a release
+      # tagged v1.2.3 would ship an APK reporting 0.1.0-dev, and every release
+      # would carry the same versionCode and refuse to install over the last one.
       - name: Build release APKs
-        run: ./gradlew assembleRelease
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            export RELEASE_VERSION="${GITHUB_REF#refs/tags/v}"
+            echo "building release version $RELEASE_VERSION"
+          fi
+          ./gradlew assembleRelease
 
       # Per-ABI APKs, signed with the debug key. Installable for testing, not
       # distributable.
@@ -106,3 +116,77 @@ jobs:
             **/build/test-results/
           if-no-files-found: ignore
           retention-days: 7
+
+  # Publishes the APKs the build job already produced and tested. It deliberately
+  # does not rebuild: the binary attached to a release should be the one the tests
+  # ran against, not a second build that happens to come from the same commit.
+  release:
+    name: Publish release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # required to create the release and upload assets
+
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: apks-${{ github.sha }}
+          path: apks
+
+      - name: Name the files after the release and checksum them
+        id: prep
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          mkdir -p dist
+          for apk in apks/*.apk; do
+            abi=$(basename "$apk" | sed -E 's/^app-(.*)-release\.apk$/\1/')
+            cp "$apk" "dist/BarProbe-${VERSION}-${abi}.apk"
+          done
+
+          cd dist
+          sha256sum *.apk > SHA256SUMS
+          ls -la
+          cat SHA256SUMS
+
+      # gh is preinstalled on the runner, so this needs no third-party action.
+      # A tag containing a hyphen (v1.0.0-rc1) is treated as a prerelease.
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.prep.outputs.version }}
+        run: |
+          set -euo pipefail
+          PRERELEASE=""
+          if [[ "$VERSION" == *-* ]]; then PRERELEASE="--prerelease"; fi
+
+          cat > notes.md <<EOF
+          Built from \`${GITHUB_SHA}\` by the Build workflow, after its tests and lint passed.
+
+          ### Which file
+
+          One APK per ABI; there is no universal build. \`arm64-v8a\` is right for
+          essentially every phone from the last several years. \`armeabi-v7a\` is for
+          older 32-bit devices and \`x86_64\` for emulators.
+
+          Verify a download against \`SHA256SUMS\`.
+
+          ### Signing
+
+          These APKs are signed with the Android **debug** key, which is public and
+          identical on every machine. That is fine for testing and sideloading, and not
+          fine for anything else: the signature proves nothing about who built them, and
+          anyone can produce an "update" your device will accept as the same app.
+
+          Because of that key, installing one of these over a differently-signed build of
+          the same app will fail until the old one is uninstalled.
+          EOF
+
+          gh release create "v${VERSION}" \
+            --title "BarProbe ${VERSION}" \
+            --notes-file notes.md \
+            $PRERELEASE \
+            dist/*.apk dist/SHA256SUMS

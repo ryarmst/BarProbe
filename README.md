@@ -24,8 +24,13 @@ fold or motion blur can produce a checksum-valid but wrong value from one frame.
 matches the escaped rendering of a payload, so looking for `\x1D` finds codes containing
 a Group Separator.
 
-**Configure** hardware using vendor programming barcodes, organised by vendor and
-purpose. See the caveat below.
+**Configure** hardware using vendor programming barcodes. 546 ship for Zebra/Symbol SSI
+scanners, decoded from the barcodes printed in the vendor's guide rather than
+transcribed from its tables, and grouped by what a setting does to the device: recovery
+first, then whether the scanner will accept further programming at all, then what it
+types into the host, then how much it will decode. Parameter values vary between product
+families, so check a code against the guide for your model before scanning it at
+hardware you care about.
 
 **Learn** what any of the above means. The reference section is generated from the same
 symbology table the encoder uses, so it can't drift from what the app will actually

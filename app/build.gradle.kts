@@ -5,6 +5,28 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+/**
+ * Release version, taken from the git tag when one is building a release.
+ *
+ * `RELEASE_VERSION` is set by the release workflow from the tag (`v1.2.3` arrives as
+ * `1.2.3`). Local builds get the -dev fallback.
+ *
+ * versionCode has to increase for Android to treat a build as an upgrade; left at a
+ * constant, every published APK would refuse to install over the previous one with a
+ * bare "App not installed". Encoding the tag as major*10000 + minor*100 + patch keeps
+ * it monotonic for versions with minor and patch below 100.
+ */
+val releaseVersionName: String = System.getenv("RELEASE_VERSION")?.takeIf { it.isNotBlank() }
+    ?: "0.1.0-dev"
+
+val releaseVersionCode: Int = Regex("""^(\d+)\.(\d+)\.(\d+)""")
+    .find(releaseVersionName)
+    ?.destructured
+    ?.let { (major, minor, patch) ->
+        major.toInt() * 10000 + minor.toInt() * 100 + patch.toInt()
+    }
+    ?: 1
+
 android {
     namespace = "dev.barcodeworkbench"
     compileSdk = libs.versions.compileSdk.get().toInt()
@@ -13,8 +35,8 @@ android {
         applicationId = "dev.barcodeworkbench"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "0.1.0-dev"
+        versionCode = releaseVersionCode
+        versionName = releaseVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
