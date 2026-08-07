@@ -31,13 +31,6 @@ purpose. See the caveat below.
 symbology table the encoder uses, so it can't drift from what the app will actually
 accept.
 
-## Config packs ship empty
-
-The schema, loader, search and UI are all there, and importing a pack works. No vendor
-parameter barcodes are bundled, because I could not verify the parameter strings against
-real documentation, and scanning a wrong one misconfigures physical hardware. Plausible
-values would have been worse than none. Add your own via the importer.
-
 ## Building
 
 Needs JDK 17 or newer (built and tested on 21) and the Android SDK. The NDK and CMake
