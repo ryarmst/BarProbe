@@ -37,6 +37,24 @@ Location: binary dependency, not vendored
 Used for barcode decoding.
 
 --------------------------------------------------------------------------------
+Radamsa
+--------------------------------------------------------------------------------
+Version:  0.7, git-rev 40d5dec416fb5277dbbd72c04b82ba2ae039778a
+License:  MIT
+Source:   https://gitlab.com/akihe/radamsa
+Location: barcode/radamsa/third_party/radamsa (vendored, generated C form)
+Full text: barcode/radamsa/third_party/radamsa/LICENCE
+
+Copyright (c) 2013 Aki Helin and contributors.
+
+Used by the fuzzing feature to mutate payloads. The vendored libradamsa.c is
+generated from radamsa's Scheme sources by the Owl Lisp compiler (an offline,
+one-time step; see PINNED_VERSION.txt and tools/regenerate-radamsa.sh), then
+compiled from plain C by the NDK. The Owl Lisp toolchain is not required to build
+the app. The bundled "hex" library used during generation
+(https://gitlab.com/owl-lisp/hex) is likewise MIT-licensed.
+
+--------------------------------------------------------------------------------
 Android Jetpack / AndroidX, including Jetpack Compose
 --------------------------------------------------------------------------------
 License:  Apache-2.0

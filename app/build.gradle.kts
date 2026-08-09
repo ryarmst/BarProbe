@@ -102,6 +102,9 @@ dependencies {
     implementation(project(":feature:catalogue"))
     implementation(project(":feature:configpacks"))
     implementation(project(":feature:learn"))
+    // :barcode:radamsa and :feature:fuzz are built but not wired in: the fuzz engine
+    // crashes under ART. They stay in the build (compiled, host-tested) but are not
+    // packaged into the app. See TODO-fuzzing.md.
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)

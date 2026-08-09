@@ -1,0 +1,15 @@
+radamsa v0.7
+  repo:    https://gitlab.com/akihe/radamsa
+  git-rev: 40d5dec416fb5277dbbd72c04b82ba2ae039778a
+
+The library C source (libradamsa.c) is generated, not hand-written: Owl Lisp
+compiles the Scheme sources to a single dependency-free C file, then the Makefile
+appends c/lib.c (the radamsa_init / radamsa wrappers). Only that generated file and
+its header are vendored, so the Android build needs a plain C compiler and no Owl
+toolchain. Regenerate with tools/regenerate-radamsa.sh.
+
+
+Generated from:
+  radamsa   40d5dec416fb5277dbbd72c04b82ba2ae039778a (v0.7)
+  hex lib   https://gitlab.com/owl-lisp/hex  e95ebd38e4f7ef8e3d4e653f432e43ce0a804ca6
+  owl       ol-0.2.2 (bootstrap, https://haltp.org/files/ol-0.2.2.c.gz)

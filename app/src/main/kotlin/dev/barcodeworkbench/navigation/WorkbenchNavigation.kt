@@ -8,6 +8,10 @@ import dev.barcodeworkbench.R
  * The top-level destinations: the four capabilities the app provides, plus the
  * reference section. Kept as a sealed hierarchy so the navigation graph and the
  * bottom bar are generated from one list and cannot drift apart.
+ *
+ * A sixth destination, Fuzz, is built but shelved: its native engine crashes under
+ * ART. It is left out of [all] rather than removed, and the code stays in the tree.
+ * See TODO-fuzzing.md to resume.
  */
 sealed class TopLevelDestination(
     val route: String,

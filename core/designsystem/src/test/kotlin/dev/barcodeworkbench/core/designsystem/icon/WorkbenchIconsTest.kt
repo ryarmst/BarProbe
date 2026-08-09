@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.Inventory2
@@ -33,6 +34,7 @@ class WorkbenchIconsTest {
         Triple("MenuBook", WorkbenchIcons.MenuBook, Icons.AutoMirrored.Outlined.MenuBook),
         Triple("Close", WorkbenchIcons.Close, Icons.Filled.Close),
         Triple("Refresh", WorkbenchIcons.Refresh, Icons.Filled.Refresh),
+        Triple("Shuffle", WorkbenchIcons.Shuffle, Icons.Filled.Shuffle),
     )
 
     @Test

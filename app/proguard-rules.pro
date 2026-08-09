@@ -33,6 +33,10 @@
     <fields>;
 }
 
+# The libradamsa JNI keep rules were removed while the fuzz feature is shelved and
+# :barcode:radamsa is not packaged into the app. Restore them alongside re-wiring the
+# feature -- see TODO-fuzzing.md.
+
 # ---------------------------------------------------------------------------
 # Serialization
 #

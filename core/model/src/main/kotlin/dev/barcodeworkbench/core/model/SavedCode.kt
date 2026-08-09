@@ -1,7 +1,7 @@
 package dev.barcodeworkbench.core.model
 
 /** Where an entry came from. Purely informational, but useful when auditing a library. */
-enum class CodeSource { GENERATED, SCANNED, IMPORTED, CONFIG_PACK }
+enum class CodeSource { GENERATED, SCANNED, IMPORTED, CONFIG_PACK, FUZZED }
 
 /** A user-created collection of codes. */
 data class CodeLibrary(

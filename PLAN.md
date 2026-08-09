@@ -1035,7 +1035,94 @@ pack's intended order, which put Programming Lock between Parameter Entry Values
 Scanner Behaviour. A `sort_order` column would be the cleaner fix and would need a
 schema v4 migration.
 
-## 26. Roadmap
+## 26. Fuzzing (radamsa)
+
+A sixth tab, Fuzz: pick a symbology, give a base payload, and step through mutated
+variants that the symbology can actually encode. The target under test is whatever
+*reads* the barcode -- a scanner and the software behind it -- not the encoder.
+
+### Native engine, same pattern as libzint
+
+radamsa is vendored the way libzint is: its library C source (`libradamsa.c`) is
+generated offline by Owl Lisp and committed under `barcode/radamsa/third_party`, so the
+app build needs only a C compiler. `tools/regenerate-radamsa.sh` reproduces it from
+pinned revisions (radamsa v0.7, a pinned hex-lib rev, ol-0.2.2). The JNI bridge is one
+call, `RadamsaNative.mutate`, wrapped by `RadamsaMutator` behind a `Mutator` interface
+in engine-api -- so the fuzz feature depends on the interface, never on radamsa, exactly
+as the generator depends only on `BarcodeEncoder`. MIT-licensed; recorded in NOTICE.
+
+### The spike changed the design
+
+Everything below was measured before building, because two findings from the library's
+actual behaviour overturned the plan pitched to the user:
+
+1. **`radamsa_init()` leaks ~1.4 MB per call** and there is no lighter reset -- it
+   `realloc`s a fresh Owl heap and never frees the last. 50 inits reached 71 MB and the
+   process was OOM-killed. So init runs **exactly once per process**; after that,
+   mutation is memory-flat (20 000 calls held ~7 MB). `RadamsaMutator` enforces this and
+   serialises calls, since radamsa is not re-entrant.
+2. **A seed does not reproduce a case on its own.** radamsa's RNG lives in the Owl VM
+   continuation and carries between calls; only the whole post-init *sequence* is
+   deterministic. Combined with (1) -- no cheap re-init -- there is no way to address
+   case N by `(base, seed)`.
+
+The pitched idea was "`(base, seed)` = a reproducible, shareable recipe". That is not
+achievable with this library, so reproducibility became **artifact-level**: a saved case
+stores its exact mutated bytes (the catalogue already stores payloads as bytes, so
+re-encoding is exact), and Prev/Next walk a **session history cache** rather than
+regenerating. The user was told and chose this over shipping radamsa in a separate
+restartable process for marginal gain.
+
+### Keeping barcodes valid (Intent A)
+
+`FuzzEngine` mutates, then trial-encodes in `BINARY` mode; a mutation the symbology
+cannot carry is skipped and the next seed tried, up to 64 attempts, with the skip count
+surfaced rather than hidden. A cheap charset pre-check rejects the obviously-doomed
+mutations before paying for an encode, so a numeric symbology returns its "nothing
+encoded" signal fast instead of running the encoder 64 times.
+
+`Fuzzability` grades each format from its registry charset rule: matrix formats
+(any byte) are GOOD, Code 128 / GS1-128 (ASCII) LIMITED, numeric/restricted POOR. The
+picker lists GOOD first and the screen states the expectation, so nobody fuzzes EAN-13
+and watches it skip forever wondering why.
+
+### Verification
+
+- **Host spike** established determinism-model, the leak, and NDK cross-compilation for
+  all three ABIs (~165-223 KB stripped, 16 KB-aligned) before any module existed.
+- **`FuzzEngineTest`** (host, fakes for mutator and encoder) pins the retry/skip logic:
+  skip count, resume seed, BINARY encode mode, the charset gate sparing the encoder on
+  EAN-13, and the fuzzability grading.
+- **`RadamsaMutatorTest`** (instrumented) pins the native contract on a device:
+  availability, variety across seeds, the length cap, and 10 000 mutations without the
+  init-leak OOM.
+- A new `CodeSource.FUZZED`, added safely because both the Room read and the backup
+  codec already decode the enum with `runCatching{valueOf}.getOrDefault`.
+- The Shuffle nav icon was vendored and added to the equal-to-original icon test, same
+  as the other seven.
+
+235 host tests pass and lint is clean.
+
+### Shelved: the engine crashes under ART
+
+Running the instrumented tests on the device exposed a hard `SIGSEGV` in radamsa's Owl
+VM (`radamsa → library_call → vm`), `SEGV_MAPERR` at a stable low address (~0x58b000).
+The decisive isolation: the *identical* code runs 10,000 mutations cleanly as a
+standalone arm64 executable **and** via `dlopen` on the same device, and only crashes
+inside the ART app process. The faulting address is mapped in an ordinary process and
+unmapped under ART, so it is a latent bad-pointer dereference in the Owl runtime that
+only fires under ART's memory layout. Ruled out: the init leak (fixed), heap relocation
+(an `adjust_heap` no-op patch did not help and was reverted), signals, and `.so` loading.
+
+The feature is therefore **built but unwired**: the Fuzz destination is out of the
+navigation list, and `:app` does not depend on `:barcode:radamsa` or `:feature:fuzz`, so
+nothing fuzz-related is packaged. The modules stay in the build (compiled, host-tested by
+`FuzzEngineTest`); the instrumented `RadamsaMutatorTest` is `@Ignore`d. The engine-agnostic
+design means resuming is a drop-in: the fix is to run radamsa in a **separate process**
+(the standalone binary already works on-device), and `TODO-fuzzing.md` records the full
+design, packaging route, IPC framing and re-wiring checklist.
+
+## 27. Roadmap
 
 Phase 0 — Environment. Android SDK, platform 36, build-tools, NDK, CMake, Gradle wrapper. In progress.
 
