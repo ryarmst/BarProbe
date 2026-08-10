@@ -82,6 +82,39 @@ these sideload APKs have different signatures and cannot update each other.
 `SIGNING.md` has the step-by-step: generating the key, filling in the secrets, and the
 Play Console checklist.
 
+## Cutting a release
+
+Releases are triggered by pushing a version tag; nothing is built or published by hand.
+
+1. Make sure `main` is committed and pushed, and (for a Play build) that the four
+   signing secrets from `SIGNING.md` are set on the repository.
+2. Tag and push:
+
+   ```
+   git tag -a vX.Y.Z -m "summary of the release" && git push origin vX.Y.Z
+   ```
+
+The `v*` tag drives everything:
+
+- **Version** — the tag sets `versionName` (`vX.Y.Z` → `X.Y.Z`) and a monotonic
+  `versionCode` (`X*10000 + Y*100 + Z`). The tag must point at the pushed commit you
+  want released, so tag after pushing.
+- **Build workflow** — runs the unit tests and lint, then builds. On green:
+  - the sideloadable per-ABI **APKs** plus `SHA256SUMS` are attached to a public GitHub
+    release (a tag with a hyphen, e.g. `v1.0.0-rc1`, is marked pre-release);
+  - if the signing secrets are present, a signed **AAB** is uploaded as a private
+    workflow artifact (`Actions` run → `Artifacts` → `aab-<sha>`) to hand to the Play
+    Console.
+
+Notes:
+
+- **Set the signing secrets before tagging** if you want the Play AAB from that build.
+  The AAB step is skipped when the secrets are absent, and a build cannot be re-run
+  against changed config from the same tag — you would tag a new patch version instead.
+- A release cannot be re-triggered by re-running the job from an old commit: GitHub uses
+  the workflow file from the tagged commit, so a fix to the release process only takes
+  effect from a tag placed on a commit that contains it.
+
 ## How it works
 
 Encoding is [libzint](https://sourceforge.net/projects/zint/) 2.16, built from vendored
