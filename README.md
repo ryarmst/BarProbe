@@ -1,6 +1,6 @@
 # BarProbe
 
-An Android barcode toolkit for functionality testing, security testing, and configuration. Largely LLM-generated. Use at your own risk, of course. 
+An Android barcode toolkit for functionality testing, security testing, and configuration. Largely LLM-generated. Use at your own risk, of course. Documentation available [here](https://ryarmst.github.io/BarProbe/) and within the app.
 
 ## Features
 
