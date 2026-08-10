@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -27,17 +29,54 @@ val releaseVersionCode: Int = Regex("""^(\d+)\.(\d+)\.(\d+)""")
     }
     ?: 1
 
+/**
+ * Release signing.
+ *
+ * Key material never lives in the repository. It is read from, in order of precedence:
+ *   1. environment variables (CI sets these from GitHub Actions secrets), or
+ *   2. a gitignored keystore.properties at the repo root (for local release builds).
+ * When neither is present the build falls back to the debug key: local and CI *debug*
+ * builds keep working and forks without secrets still compile, but a debug-signed build
+ * is only good for sideloading and is never what gets uploaded to Play.
+ */
+val keystoreProperties = Properties().apply {
+    val file = rootProject.file("keystore.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+fun signingParam(env: String, prop: String): String? =
+    System.getenv(env) ?: keystoreProperties.getProperty(prop)
+
+val releaseStoreFile: String? = signingParam("SIGNING_KEYSTORE_FILE", "storeFile")
+
 android {
     namespace = "dev.barcodeworkbench"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "dev.barcodeworkbench"
+        // The Play-registered package. Permanent once published. Kept distinct from
+        // `namespace` (the internal Kotlin package root), which AGP allows to differ
+        // and which there is no user-facing reason to rename across ~500 files.
+        applicationId = "ca.ryarmst.barprobe"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = releaseVersionCode
         versionName = releaseVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        // Created only when a keystore is available; otherwise the release build falls
+        // back to the debug key below. The passwords/alias come from the same
+        // env-or-properties source as the store path, so no secret is ever written
+        // into the build files.
+        if (releaseStoreFile != null) {
+            create("release") {
+                storeFile = file(releaseStoreFile)
+                storePassword = signingParam("SIGNING_KEYSTORE_PASSWORD", "storePassword")
+                keyAlias = signingParam("SIGNING_KEY_ALIAS", "keyAlias")
+                keyPassword = signingParam("SIGNING_KEY_PASSWORD", "keyPassword")
+            }
+        }
     }
 
     buildTypes {
@@ -48,19 +87,27 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            // Signed with the debug key deliberately, so the release build is
-            // installable for validating R8, resource shrinking and native packaging.
-            // This is NOT distributable: replace with a real signing config before
-            // publishing anything.
-            signingConfig = signingConfigs.getByName("debug")
+            // The real upload key when a keystore is configured (CI from secrets, or a
+            // local keystore.properties); the debug key otherwise, which is fine for
+            // sideloading but must never be what is uploaded to Play.
+            signingConfig = signingConfigs.getByName(
+                if (releaseStoreFile != null) "release" else "debug",
+            )
         }
     }
 
-    // Each ABI ships its own native encoder, so split rather than making every
-    // user download all three.
+    // Each ABI ships its own native encoder, so the sideload APKs split by ABI rather
+    // than making every user download all three. This is for `assembleRelease` only:
+    // an App Bundle does its own per-ABI splitting and AGP rejects the combination of
+    // ABI splits and bundling (it produces multiple shrunk-resource files). So the
+    // split is switched off whenever a bundle task is in the build, which means
+    // `assembleRelease` and `bundleRelease` must be run as separate invocations.
     splits {
         abi {
-            isEnable = true
+            val buildingBundle = gradle.startParameter.taskNames.any {
+                it.contains("bundle", ignoreCase = true)
+            }
+            isEnable = !buildingBundle
             reset()
             include("arm64-v8a", "armeabi-v7a", "x86_64")
             isUniversalApk = false

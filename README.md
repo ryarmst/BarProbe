@@ -40,18 +40,47 @@ accept.
 
 Needs JDK 17 or newer (built and tested on 21) and the Android SDK. The NDK and CMake
 versions are pinned in `gradle/libs.versions.toml` and must match — libzint is compiled
-from source.
+from source. The application ID is `ca.ryarmst.barprobe`.
 
 ```
 ./gradlew assembleRelease
 ```
 
-Produces per-ABI APKs under `app/build/outputs/apk/release/`. They are signed with the
-debug key so they install for testing; they are not distributable.
+Produces per-ABI APKs under `app/build/outputs/apk/release/`. Without a signing key
+configured they are debug-signed — installable for testing, not for distribution.
 
 ```
 ./gradlew test
 ```
+
+## Signing and publishing
+
+Release builds are signed with a real upload key when one is available, and fall back to
+the debug key otherwise (so ordinary builds and forks still work). Key material is never
+stored in the repository.
+
+- **Locally**, put an `upload.jks` somewhere outside the repo and a gitignored
+  `keystore.properties` at the repo root:
+
+  ```
+  storeFile=/absolute/path/to/upload.jks
+  storePassword=…
+  keyAlias=upload
+  keyPassword=…
+  ```
+
+- **In CI**, the same values come from GitHub Actions secrets: `SIGNING_KEYSTORE_BASE64`
+  (the `.jks`, base64-encoded), `SIGNING_KEYSTORE_PASSWORD`, `SIGNING_KEY_ALIAS`,
+  `SIGNING_KEY_PASSWORD`. Pushing a `v*` tag then builds a signed AAB
+  (`app/build/outputs/bundle/release/app-release.aab`) and uploads it as a private
+  workflow artifact to hand to the Play Console. The public GitHub release keeps the
+  sideloadable APKs.
+
+Google Play re-signs the uploaded AAB with its own app-signing key, so Play installs and
+these sideload APKs have different signatures and cannot update each other.
+
+`SIGNING.md` has the step-by-step: generating the key, filling in the secrets, and the
+Play Console checklist.
 
 ## How it works
 

@@ -11,6 +11,14 @@ build/
 # Local SDK location; machine-specific
 local.properties
 
+# Signing key material — must never be committed. The keystore lives only on your
+# machine and in GitHub Actions secrets; keystore.properties holds its passwords for
+# local release builds. CI decodes the keystore from a secret at build time.
+*.jks
+*.keystore
+keystore.properties
+upload-key*.b64
+
 # Native build scratch
 .cxx/
 build-host/
