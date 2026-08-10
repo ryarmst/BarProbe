@@ -4,17 +4,23 @@ A pack is one JSON file describing programming barcodes for a device family.
 
 ## What ships
 
-The `zebra` pack carries 546 parameter barcodes for Zebra/Symbol SSI scanners. Every
-entry's `data` was decoded from the barcode image printed in the vendor's own
-configuration guide, not transcribed from the tables beside it, then re-encoded and
-decoded again to confirm it survives a round trip unchanged. `tools/extract-config-pack.py`
-does this and can be pointed at another guide.
+Three vendor packs ship, each decoded from the barcodes printed in the vendor's own
+guide — never transcribed from the tables beside them — then re-encoded and decoded
+again to confirm each survives a round trip unchanged:
 
-The `honeywell` and `datalogic` packs are still empty. Programming barcodes reconfigure
-real hardware and the correct parameter string differs between vendors, product families
-and sometimes firmware revisions, so nothing goes in until it can be read off a
-published barcode the same way. Author your own from the guide for your model and
-import it.
+- `zebra` — 546 codes for Zebra/Symbol SSI scanners, from the SSI configuration guide.
+- `datalogic` — 617 codes, from the QD2220 product reference guide.
+- `honeywell` — 14 codes, from the Voyager 1200g quick-start guide.
+
+Two extractors build them. `tools/extract-config-pack.py` handles Zebra's SSI manual
+with its rich chapter structure. `tools/extract-command-pack.py` handles the
+command-grammar vendors (Datalogic `$…`, Honeywell `~…`): the command prefix itself
+separates real programming codes from the sample/illustration barcodes a manual also
+prints, and multi-scan character primitives (which mean nothing standalone) are dropped.
+
+Codes vary by model and firmware, so a pack is a starting point — check a code against
+the guide for your exact scanner before scanning it at hardware you care about. Author
+more from a guide and import them the same way.
 
 The bundled `selftest` pack contains ordinary data barcodes only; it carries no commands
 and cannot change any device setting.
