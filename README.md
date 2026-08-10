@@ -19,9 +19,9 @@ fold or motion blur can produce a checksum-valid but wrong value from one frame.
 matches the escaped rendering of a payload, so looking for `\x1D` finds codes containing
 a Group Separator.
 
-**Configure** a built=in library for hardware using vendor programming barcodes.
+**Configure** hardware using a built-in library of vendor programming barcodes.
 
-**Learn** a reference section generated from the same symbology table the encoder uses
+**Learn** — a reference section generated from the same symbology table the encoder uses.
 
 ## Building
 
@@ -69,7 +69,6 @@ these sideload APKs have different signatures and cannot update each other.
 `SIGNING.md` has the step-by-step: generating the key, filling in the secrets, and the
 Play Console checklist.
 
-<<<<<<< HEAD
 ## Cutting a release
 
 Releases are triggered by pushing a version tag; nothing is built or published by hand.
@@ -103,10 +102,7 @@ Notes:
   the workflow file from the tagged commit, so a fix to the release process only takes
   effect from a tag placed on a commit that contains it.
 
-## How it works
-=======
 ## Libraries
->>>>>>> 072985936c4c792e5cc211879e89540738f0f356
 
 Encoding is [libzint](https://sourceforge.net/projects/zint/) 2.16, built from vendored
 source through a hand-written JNI bridge that returns the raw module matrix rather than
@@ -115,6 +111,15 @@ identical everywhere. Decoding is [zxing-cpp](https://github.com/zxing-cpp/zxing
 
 `PLAN.md` documents the design and the reasoning behind it, including the parts that
 went wrong.
+
+## Documentation
+
+The Learn guides live as plain Markdown in [`docs/learn`](docs/learn) — that is the
+single source. A build step compiles them into the app's in-app content, and the same
+files are published to the documentation site at
+<https://ryarmst.github.io/BarProbe/>. The reference pages (supported symbologies,
+escape syntax) are generated from the symbology registry, so they match what the app
+actually encodes. To edit a guide, change the Markdown; both the app and the site follow.
 
 ## Licence
 

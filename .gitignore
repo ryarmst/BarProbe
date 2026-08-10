@@ -27,3 +27,7 @@ build-android/
 # IDE
 .idea/
 *.iml
+
+# Generated documentation (reference pages built from the registry by CI)
+docs/reference/
+site/

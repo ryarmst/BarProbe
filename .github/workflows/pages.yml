@@ -1,0 +1,72 @@
+name: Pages
+
+# Publishes the documentation site. The Learn articles are the Markdown under docs/;
+# the Reference pages are generated from the symbology registry so they match the app.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'tools/docs/**'
+      - 'core/model/**'
+      - 'mkdocs.yml'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+# Least privilege plus what Pages deployment requires.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One site at a time; a newer commit supersedes an in-flight deploy.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      # Generate the reference Markdown from the registry into docs/reference (which is
+      # gitignored). This is what keeps the published tables in step with the encoder.
+      - name: Generate reference pages
+        run: ./gradlew :tools:docs:generateReference -PreferenceOut=docs/reference
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.x'
+
+      - name: Build site
+        run: |
+          set -euo pipefail
+          pip install mkdocs-material
+          mkdocs build --strict
+
+      - uses: actions/configure-pages@v6
+
+      - name: Upload site
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+      - name: Deploy
+        id: deploy
+        uses: actions/deploy-pages@v5
